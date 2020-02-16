@@ -102,14 +102,9 @@ class Down_Mod_Conv(Modulated_Conv2d):
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, factor=2):
-        if kernel_size > factor:
-            padding, dilation = kernel_size//2, 1
-        else:
-            dilation = int((factor+kernel_size-3)/(kernel_size-1))
-            k = dilation*(kernel_size-1) + 1
-            padding = k//2
+        padding = kernel_size//2
         super().__init__(in_channels, out_channels, kernel_size, latent_size, demodulate, bias,
-                         stride=factor, padding=padding, dilation=dilation)
+                         stride=factor, padding=padding)
 
     def convolve(self, x, w, groups):
         return F.conv2d(x, w, None, self.stride, self.padding, self.dilation, groups=groups)
