@@ -72,7 +72,7 @@ class Modulated_Conv2d(nn.Conv2d):
 
 
 
-class Upsample_Conv2d(Modulated_Conv2d):
+class Up_Mod_Conv(Modulated_Conv2d):
     '''
     Convolution layer with upsampling by some factor, implemented with transposed conv.
     '''
@@ -96,7 +96,7 @@ class Upsample_Conv2d(Modulated_Conv2d):
 
 
 
-class Downsample_Conv2d(Modulated_Conv2d):
+class Down_Mod_Conv(Modulated_Conv2d):
     '''
     Convolution layer with downsampling by some factor
     '''
@@ -163,14 +163,14 @@ class G_Block(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, latent_size, nonlinearity=nn.LeakyReLU(0.2)):
         super().__init__()
         inter_channels = (in_channels + out_channels)//2
-        self.upconv = Upsample_Conv2d(in_channels, inter_channels, kernel_size, latent_size,
+        self.upconv = Up_Mod_Conv(in_channels, inter_channels, kernel_size, latent_size,
                                       factor=2)
         self.conv = Modulated_Conv2d(inter_channels, out_channels, kernel_size, latent_size,
                                      padding=kernel_size//2)
         self.noise = Noise()
         self.toRGB = Modulated_Conv2d(out_channels, 3, kernel_size=1,
                                       latent_size=latent_size, demodulate = False)
-        self.upsample = nn.Upsample(scale_factor=2)
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear')
         self.act = nonlinearity
 
     def forward(self, x,v,y=0):
