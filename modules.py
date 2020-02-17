@@ -170,7 +170,7 @@ class G_Block(nn.Module):
     '''
     Basic block for generator.
     '''
-    def __init__(self, in_channels, out_channels, kernel_size, latent_size, nonlinearity=nn.LeakyReLU(0.2)):
+    def __init__(self, in_channels, out_channels, kernel_size, latent_size, nonlinearity):
         super().__init__()
         inter_channels = (in_channels + out_channels)//2
         self.upconv = Up_Mod_Conv(in_channels, inter_channels, kernel_size, latent_size,
@@ -200,14 +200,13 @@ class D_Block(nn.Module):
     '''
     Basic block for discriminator.
     '''
-    def __init__(self, in_channels, out_channels, kernel_size, nonlinearity=nn.LeakyReLU(0.2)):
+    def __init__(self, in_channels, out_channels, kernel_size, nonlinearity):
         super().__init__()
         inter_channels = (in_channels + out_channels)//2
         self.conv = nn.Conv2d(in_channels, inter_channels, kernel_size, padding=kernel_size//2)
         self.downconv = Down_Conv2d(inter_channels, out_channels, kernel_size, factor=2)
         self.down = Down_Conv2d(in_channels, out_channels, kernel_size=1, factor=2)
         self.act = nonlinearity
-
 
     def forward(self, x):
         t = x
@@ -217,3 +216,30 @@ class D_Block(nn.Module):
         x = self.act(x)
         t = self.down(t)
         return (x + t)/ np.sqrt(2)
+
+
+
+
+class Minibatch_Stddev(nn.Module):
+    '''
+    Minibatch standard deviation layer.
+    '''
+    def forward(self, x):
+        t = x - x.mean(dim=0, keepdim=True)
+        t = torch.sqrt((t**2).mean(dim=0, keepdim=True) + 1e-8)
+        t = t.mean(dim=[1,2,3], keepdim=True)
+        t = t.expand(x.shape[0],1,*x.shape[2:])
+        return torch.cat((x,t),dim=1)
+
+
+
+
+
+class Scaled_LReLU(nn.Module):
+    def __init__(self, neg_slope=0.2, scale=np.sqrt(2)):
+        super().__init__()
+        self.act = nn.LeakyReLU(neg_slope)
+        self.scale = scale
+
+    def forward(self, input):
+        return self.scale*self.act(input)
