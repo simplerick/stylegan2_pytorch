@@ -112,6 +112,21 @@ class Down_Mod_Conv(Modulated_Conv2d):
 
 
 
+class Down_Conv2d(nn.Conv2d):
+    '''
+    Convolution layer with downsampling by some factor
+    '''
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 bias=True, factor=2):
+        padding = kernel_size//2
+        super().__init__(in_channels, out_channels, kernel_size, factor, padding, bias=True)
+
+    def convolve(self, x):
+        return F.conv2d(x, w, None, self.stride, self.padding, self.dilation, self.groups)
+
+
+
+
 
 class Noise(nn.Module):
     '''
@@ -177,3 +192,28 @@ class G_Block(nn.Module):
             y = self.upsample(y)
         y = y + self.act(self.toRGB(x,v))
         return x, y
+
+
+
+
+class D_Block(nn.Module):
+    '''
+    Basic block for discriminator.
+    '''
+    def __init__(self, in_channels, out_channels, kernel_size, nonlinearity=nn.LeakyReLU(0.2)):
+        super().__init__()
+        inter_channels = (in_channels + out_channels)//2
+        self.conv = nn.Conv2d(in_channels, inter_channels, kernel_size, padding=kernel_size//2)
+        self.downconv = Down_Conv2d(inter_channels, out_channels, kernel_size, factor=2)
+        self.down = Down_Conv2d(in_channels, out_channels, kernel_size=1, factor=2)
+        self.act = nonlinearity
+
+
+    def forward(self, x):
+        t = x
+        x = self.conv(x)
+        x = self.act(x)
+        x = self.downconv(x)
+        x = self.act(x)
+        t = self.down(t)
+        return (x + t)/ np.sqrt(2)
