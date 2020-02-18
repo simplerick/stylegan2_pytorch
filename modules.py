@@ -155,7 +155,9 @@ class Mapping(nn.Module):
         self.normalize = normalize
         self.layers = []
         for idx in range(n_layers):
-            self.layers.append(nn.Linear(latent_size, latent_size))
+            layer = nn.Linear(latent_size, latent_size)
+            self.add_module('idx', layer)
+            self.layers.append(layer)
             self.layers.append(nonlinearity)
 
     def forward(self, input):
