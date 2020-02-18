@@ -14,7 +14,6 @@ class Modulated_Conv2d(nn.Conv2d):
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, stride=1, padding=0, dilation=1, **kwargs):
-        assert (kernel_size % 2 == 1)
         super().__init__(in_channels, out_channels, kernel_size, stride,
                          padding, dilation, groups=1,
                          bias=bias, padding_mode='zeros')
@@ -78,6 +77,7 @@ class Up_Mod_Conv(Modulated_Conv2d):
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, factor=2):
+        assert (kernel_size % 2 == 1)
         padding = (max(kernel_size-factor,0)+1)//2
         super().__init__(in_channels, out_channels, kernel_size, latent_size, demodulate, bias,
                          stride=factor, padding=padding)
@@ -102,6 +102,7 @@ class Down_Mod_Conv(Modulated_Conv2d):
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, factor=2):
+        assert (kernel_size % 2 == 1)
         padding = kernel_size//2
         super().__init__(in_channels, out_channels, kernel_size, latent_size, demodulate, bias,
                          stride=factor, padding=padding)
@@ -118,6 +119,7 @@ class Down_Conv2d(nn.Conv2d):
     '''
     def __init__(self, in_channels, out_channels, kernel_size,
                  bias=True, factor=2):
+        assert (kernel_size % 2 == 1)
         padding = kernel_size//2
         super().__init__(in_channels, out_channels, kernel_size, factor, padding, bias=True)
 
