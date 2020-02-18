@@ -148,11 +148,11 @@ class Mapping(nn.Module):
     '''
     Mapping network. Transforms the input latent code to the disentangled latent representation.
     '''
-    def __init__(self, n_layers, n_features, nonlinearity, normalize=True):
+    def __init__(self, n_layers, latent_size, nonlinearity, normalize=True):
         super().__init__()
         self.normalize = normalize
         for idx in range(n_layers):
-            self.add_module(str(2*idx), nn.Linear(n_features, n_features))
+            self.add_module(str(2*idx), nn.Linear(latent_size, latent_size))
             self.add_module(str(2*idx+1), nonlinearity)
 
     def forward(self, input):
