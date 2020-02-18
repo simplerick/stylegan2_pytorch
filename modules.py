@@ -229,11 +229,17 @@ class Minibatch_Stddev(nn.Module):
     '''
     Minibatch standard deviation layer.
     '''
+    def __init__(self, group_size=4):
+        super().__init__()
+        self.group_size = group_size
+
     def forward(self, x):
-        t = x - x.mean(dim=0, keepdim=True)
-        t = torch.sqrt((t**2).mean(dim=0, keepdim=True) + 1e-8)
-        t = t.mean(dim=[1,2,3], keepdim=True)
-        t = t.expand(x.shape[0],1,*x.shape[2:])
+        s = x.shape
+        t = x.view(self.group_size, -1, s[1], s[2], s[3])
+        t = t - t.mean(dim=0, keepdim=True)
+        t = torch.sqrt((t**2).mean(dim=0) + 1e-8)
+        t = t.mean(dim=[1,2,3], keepdim=True) # [N/G,1,1,1]
+        t = t.repeat(self.group_size,1,1,1).expand(x.shape[0],1,*x.shape[2:])
         return torch.cat((x,t),dim=1)
 
 
