@@ -16,15 +16,13 @@ def D_logistic(real_logits, fake_logits):
 
 def R1_reg(real_imgs, real_logits):
     grads = torch.autograd.grad(real_logits.sum(), real_imgs, create_graph=True)[0]
-    # Disable gradients for imgs
-    real_imgs.reqires_grad = False
     return torch.mean(grads**2)
 
 
 
-class Path_length_reg(nn.Module):
+class Path_length_loss(nn.Module):
     def __init__(self, decay=0.01):
-        super().init()
+        super().__init__()
         self.decay = decay
         self.avg = 0
 
@@ -32,8 +30,6 @@ class Path_length_reg(nn.Module):
         # Compute |J*y|.
         noise = torch.randn(gen_out.shape) #[N,Channels,H,W]
         grads = torch.autograd.grad((gen_out * noise).sum(), latent, create_graph=True)[0]  #[N,latent_size]
-        # Disable gradients for latent
-        latent.reqires_grad = False
         lengths = torch.sqrt((grads**2).sum(1)) #[N]
         # Update exp average. Lengths are detached
         self.avg = self.decay*torch.mean(lengths.detach()) + (1-self.decay)*self.avg
