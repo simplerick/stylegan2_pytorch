@@ -171,15 +171,15 @@ class G_Block(nn.Module):
     '''
     Basic block for generator. Increases spatial dimensions by predefined factor.
     '''
-    def __init__(self, in_channels, out_channels, kernel_size, latent_size, nonlinearity, factor=2):
+    def __init__(self, in_fmaps, out_fmaps, kernel_size, latent_size, nonlinearity, factor=2, img_channels=3):
         super().__init__()
-        inter_channels = (in_channels + out_channels)//2
-        self.upconv = Up_Mod_Conv(in_channels, inter_channels, kernel_size, latent_size,
+        inter_fmaps = (in_fmaps + out_fmaps)//2
+        self.upconv = Up_Mod_Conv(in_fmaps, inter_fmaps, kernel_size, latent_size,
                                       factor=factor)
-        self.conv = Modulated_Conv2d(inter_channels, out_channels, kernel_size, latent_size,
+        self.conv = Modulated_Conv2d(inter_fmaps, out_fmaps, kernel_size, latent_size,
                                      padding=kernel_size//2)
         self.noise = Noise()
-        self.toRGB = Modulated_Conv2d(out_channels, 3, kernel_size=1,
+        self.to_channels = Modulated_Conv2d(out_fmaps, img_channels, kernel_size=1,
                                       latent_size=latent_size, demodulate = False)
         self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear', align_corners=False)
         self.act = nonlinearity
@@ -193,7 +193,7 @@ class G_Block(nn.Module):
             y = self.upsample(y)
         else:
             y = 0
-        y = y + self.act(self.toRGB(x,v))
+        y = y + self.act(self.to_channels(x,v))
         return x, y
 
 
@@ -203,12 +203,12 @@ class D_Block(nn.Module):
     '''
     Basic block for discriminator. Decreases spatial dimensions by predefined factor.
     '''
-    def __init__(self, in_channels, out_channels, kernel_size, nonlinearity, factor=2):
+    def __init__(self, in_fmaps, out_fmaps, kernel_size, nonlinearity, factor=2):
         super().__init__()
-        inter_channels = (in_channels + out_channels)//2
-        self.conv = nn.Conv2d(in_channels, inter_channels, kernel_size, padding=kernel_size//2)
-        self.downconv = Down_Conv2d(inter_channels, out_channels, kernel_size, factor=factor)
-        self.down = Down_Conv2d(in_channels, out_channels, kernel_size=1, factor=factor)
+        inter_fmaps = (in_fmaps + out_fmaps)//2
+        self.conv = nn.Conv2d(in_fmaps, inter_fmaps, kernel_size, padding=kernel_size//2)
+        self.downconv = Down_Conv2d(inter_fmaps, out_fmaps, kernel_size, factor=factor)
+        self.down = Down_Conv2d(in_fmaps, out_fmaps, kernel_size=1, factor=factor)
         self.act = nonlinearity
 
     def forward(self, x):

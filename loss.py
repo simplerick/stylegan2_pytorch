@@ -30,7 +30,7 @@ class Path_length_reg(nn.Module):
 
     def forward(self, latent, gen_out):
         # Compute |J*y|.
-        noise = torch.randn(gen_out.shape) #[N,3,H,W]
+        noise = torch.randn(gen_out.shape) #[N,Channels,H,W]
         grads = torch.autograd.grad((gen_out * noise).sum(), latent, create_graph=True)[0]  #[N,latent_size]
         # Disable gradients for latent
         latent.reqires_grad = False
