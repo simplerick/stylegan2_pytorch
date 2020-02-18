@@ -13,7 +13,7 @@ class Modulated_Conv2d(nn.Conv2d):
     Modulated convolution layer. Implemented efficiently using grouped convolutions.
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
-                 demodulate=True, bias=True, stride=1, padding=0, dilation=1):
+                 demodulate=True, bias=True, stride=1, padding=0, dilation=1, **kwargs):
         assert (kernel_size % 2 == 1)
         super().__init__(in_channels, out_channels, kernel_size, stride,
                          padding, dilation, groups=1,
@@ -81,7 +81,7 @@ class Up_Mod_Conv(Modulated_Conv2d):
         padding = (max(kernel_size-factor,0)+1)//2
         super().__init__(in_channels, out_channels, kernel_size, latent_size, demodulate, bias,
                          stride=factor, padding=padding)
-        self.output_padding = 2*padding - kernel_size + factor
+        self.output_padding = torch.nn.modules.utils._pair(2*padding - kernel_size + factor)
         # transpose as expected in F.conv_transpose2d
         self.weight = nn.Parameter(self.weight.transpose(0,1).contiguous())
         # taking into account transposition
@@ -151,14 +151,15 @@ class Mapping(nn.Module):
     def __init__(self, n_layers, latent_size, nonlinearity, normalize=True):
         super().__init__()
         self.normalize = normalize
+        self.layers = []
         for idx in range(n_layers):
-            self.add_module(str(2*idx), nn.Linear(latent_size, latent_size))
-            self.add_module(str(2*idx+1), nonlinearity)
+            self.layers.append(nn.Linear(latent_size, latent_size))
+            self.layers.append(nonlinearity)
 
     def forward(self, input):
-        if normalize:
+        if self.normalize:
             input = input/torch.sqrt((input**2).mean(dim=1, keepdim=True) + 1e-8)
-        for module in self:
+        for module in self.layers:
             input = module(input)
         return input
 
@@ -180,16 +181,18 @@ class G_Block(nn.Module):
         self.noise = Noise()
         self.toRGB = Modulated_Conv2d(out_channels, 3, kernel_size=1,
                                       latent_size=latent_size, demodulate = False)
-        self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear')
+        self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear', align_corners=False)
         self.act = nonlinearity
 
-    def forward(self, x,v,y=0):
+    def forward(self, x,v,y=None):
         x = self.noise(self.upconv(x,v))
         x = self.act(x)
         x = self.noise(self.conv(x,v))
         x = self.act(x)
-        if y != 0:
+        if not y is None:
             y = self.upsample(y)
+        else:
+            y = 0
         y = y + self.act(self.toRGB(x,v))
         return x, y
 
