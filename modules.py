@@ -20,6 +20,7 @@ class Modulated_Conv2d(nn.Conv2d):
         self.demodulate = demodulate
         # style mapping
         self.style = nn.Linear(latent_size, in_channels)
+        torch.nn.init.normal_(self.style.weight)
         # required shape might be different in transposed conv
         self.s_broadcast_view = (-1,1,self.in_channels,1,1)
         self.in_channels_dim = 2
@@ -37,7 +38,7 @@ class Modulated_Conv2d(nn.Conv2d):
         w = self.weight.unsqueeze(0)
 
         # compute styles: (N, C_in)
-        s = self.style(v)
+        s = self.style(v) + 1
 
         # modulate: (N, ch dims, K, K)
         w = s.view(self.s_broadcast_view)*w
