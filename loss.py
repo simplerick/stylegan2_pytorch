@@ -26,10 +26,10 @@ class Path_length_loss(nn.Module):
         self.decay = decay
         self.avg = 0
 
-    def forward(self, latent, gen_out):
+    def forward(self, dlatent, gen_out):
         # Compute |J*y|.
-        noise = torch.randn(gen_out.shape) #[N,Channels,H,W]
-        grads = torch.autograd.grad((gen_out * noise).sum(), latent, create_graph=True)[0]  #[N,latent_size]
+        noise = torch.randn(gen_out.shape)/np.sqrt(np.prod(gen_out.shape[2:])) #[N,Channels,H,W]
+        grads = torch.autograd.grad((gen_out * noise).sum(), dlatent, create_graph=True)[0]  #[N,dlatent_size]
         lengths = torch.sqrt((grads**2).sum(1)) #[N]
         # Update exp average. Lengths are detached
         self.avg = self.decay*torch.mean(lengths.detach()) + (1-self.decay)*self.avg
