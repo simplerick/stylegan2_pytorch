@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from copy import deepcopy
 
 
@@ -20,7 +21,7 @@ class Scaled_Act(nn.Module):
 
 
 
-class EqualLR:
+class Equal_LR:
     '''
     Equalized learning rate. Applies recursively to all submodules.
     '''
@@ -50,3 +51,20 @@ class EqualLR:
         new_module = deepcopy(module)
         new_module.apply(self.fn)
         return new_module
+
+
+
+def grid(array, ncols=8):
+    """
+    Makes grid from batch of images with shape (n_batch, height, width, channels)
+    """
+    array = np.pad(array, [(0,0),(1,1),(1,1),(0,0)], 'constant')
+    nindex, height, width, intensity = array.shape
+    nrows = (nindex+ncols-1)//ncols
+    r = nrows*ncols - nindex # remainder
+    # want result.shape = (height*nrows, width*ncols, intensity)
+    arr = np.concatenate([array]+[np.zeros([1,height,width,intensity])]*r)
+    result = (arr.reshape(nrows, ncols, height, width, intensity)
+              .swapaxes(1,2)
+              .reshape(height*nrows, width*ncols, intensity))
+    return np.pad(result, [(1,1),(1,1),(0,0)], 'constant')
