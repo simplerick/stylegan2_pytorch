@@ -68,3 +68,16 @@ def grid(array, ncols=8):
               .swapaxes(1,2)
               .reshape(height*nrows, width*ncols, intensity))
     return np.pad(result, [(1,1),(1,1),(0,0)], 'constant')
+
+
+
+class NextDataLoader(torch.utils.data.DataLoader):
+    '''
+    Dataloader with __next__ method
+    '''
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except:
+            self.iterator = self.__iter__()
+            return next(self.iterator)
