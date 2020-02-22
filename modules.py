@@ -85,6 +85,7 @@ class Up_Mod_Conv(Modulated_Conv2d):
         self.output_padding = torch.nn.modules.utils._pair(2*padding - kernel_size + factor)
         # transpose as expected in F.conv_transpose2d
         self.weight = nn.Parameter(self.weight.transpose(0,1).contiguous())
+        self.transposed = True
         # taking into account transposition
         self.s_broadcast_view = (-1,self.in_channels,1,1,1)
         self.in_channels_dim = 1
@@ -139,8 +140,9 @@ class Noise(nn.Module):
         super().__init__()
         self.noise_strength = nn.Parameter(torch.zeros(1))
 
-    def forward(self, x):
-        noise = self.noise_strength*torch.randn(x.shape[0],1,x.shape[2],x.shape[3])
+    def forward(self, x, input_noise=None):
+        input_noise = input_noise if input_noise else torch.randn(x.shape[0],1,x.shape[2],x.shape[3])
+        noise = self.noise_strength*input_noise
         return x + noise
 
 
@@ -189,10 +191,10 @@ class G_Block(nn.Module):
         self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear', align_corners=False)
         self.act = nonlinearity
 
-    def forward(self, x,v,y=None):
-        x = self.noise(self.upconv(x,v))
+    def forward(self, x, v, y=None, input_noises=[None,None]):
+        x = self.noise(self.upconv(x,v), input_noises[0])
         x = self.act(x)
-        x = self.noise(self.conv(x,v))
+        x = self.noise(self.conv(x,v), input_noises[1])
         x = self.act(x)
         if not y is None:
             y = self.upsample(y)
@@ -244,16 +246,3 @@ class Minibatch_Stddev(nn.Module):
         t = t.mean(dim=[1,2,3], keepdim=True) # [N/G,1,1,1]
         t = t.repeat(self.group_size,1,1,1).expand(x.shape[0],1,*x.shape[2:])
         return torch.cat((x,t),dim=1)
-
-
-
-
-
-class Scaled_LReLU(nn.Module):
-    def __init__(self, neg_slope=0.2, scale=np.sqrt(2)):
-        super().__init__()
-        self.act = nn.LeakyReLU(neg_slope)
-        self.scale = scale
-
-    def forward(self, input):
-        return self.scale*self.act(input)
