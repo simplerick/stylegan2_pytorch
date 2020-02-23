@@ -42,8 +42,8 @@ class Equal_LR:
     def fn(self, module):
         try:
             weight = getattr(module, self.name)
-            module.scale = 1/np.sqrt(EqualLR.compute_norm(module, weight))
-            module.equalize = module.register_forward_hook(EqualLR.scale)
+            module.scale = 1/np.sqrt(Equal_LR.compute_norm(module, weight))
+            module.equalize = module.register_forward_hook(Equal_LR.scale)
         except:
             pass
 
