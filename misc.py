@@ -35,15 +35,20 @@ class Equal_LR:
             mode = 'fan_out'
         return torch.nn.init._calculate_correct_fan(weight, mode)
 
-    @staticmethod
-    def scale(module, input, output):
-        return module.scale*output
+
+    def scale_weight(self, module, input):
+        setattr(module, self.name, module.scale*module.weight_orig)
+
 
     def fn(self, module):
         try:
             weight = getattr(module, self.name)
             module.scale = 1/np.sqrt(Equal_LR.compute_norm(module, weight))
-            module.equalize = module.register_forward_hook(Equal_LR.scale)
+            # register new parameter -- unscaled weight
+            module.weight_orig = nn.Parameter(weight.clone())
+            # delete old parameter
+            del module._parameters[self.name]
+            module.equalize = module.register_forward_pre_hook(self.scale_weight)
         except:
             pass
 
@@ -51,6 +56,7 @@ class Equal_LR:
         new_module = deepcopy(module)
         new_module.apply(self.fn)
         return new_module
+
 
 
 
