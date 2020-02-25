@@ -20,11 +20,12 @@ class Modulated_Conv2d(nn.Conv2d):
         self.demodulate = demodulate
         # style mapping
         self.style = nn.Linear(latent_size, in_channels)
-        torch.nn.init.normal_(self.style.weight)
         # required shape might be different in transposed conv
         self.s_broadcast_view = (-1,1,self.in_channels,1,1)
         self.in_channels_dim = 2
-
+        # initialization
+        torch.nn.init.normal_(self.weight)
+        torch.nn.init.normal_(self.style.weight)
 
     def convolve(self,x,w,groups):
         # bias would be added later
@@ -124,6 +125,8 @@ class Down_Conv2d(nn.Conv2d):
         assert (kernel_size % 2 == 1)
         padding = kernel_size//2
         super().__init__(in_channels, out_channels, kernel_size, factor, padding, bias=True)
+        # initialization
+        torch.nn.init.normal_(self.weight)
 
     def convolve(self, x):
         return F.conv2d(x, w, None, self.stride, self.padding, self.dilation, self.groups)
@@ -159,6 +162,7 @@ class Mapping(nn.Module):
         self.layers = []
         for idx in range(n_layers):
             layer = nn.Linear(latent_size, latent_size)
+            torch.nn.init.normal_(layer.weight)
             self.add_module(str(idx), layer)
             self.layers.append(layer)
             self.layers.append(nonlinearity)
