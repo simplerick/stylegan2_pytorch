@@ -45,7 +45,7 @@ class Equal_LR:
             weight = getattr(module, self.name)
             module.scale = 1/np.sqrt(Equal_LR.compute_norm(module, weight))
             # register new parameter -- unscaled weight
-            module.weight_orig = nn.Parameter(weight.clone())
+            module.weight_orig = nn.Parameter(weight.clone()/module.scale)
             # delete old parameter
             del module._parameters[self.name]
             module.equalize = module.register_forward_pre_hook(self.scale_weight)
