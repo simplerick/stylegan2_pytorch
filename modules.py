@@ -204,7 +204,7 @@ class G_Block(nn.Module):
             y = self.upsample(y)
         else:
             y = 0
-        y = y + self.act(self.to_channels(x,v))
+        y = y + self.to_channels(x,v)
         return x, y
 
 
