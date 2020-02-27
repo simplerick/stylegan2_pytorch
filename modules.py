@@ -144,7 +144,7 @@ class Noise(nn.Module):
         self.noise_strength = nn.Parameter(torch.zeros(1))
 
     def forward(self, x, input_noise=None):
-        input_noise = input_noise if input_noise else torch.randn(x.shape[0],1,x.shape[2],x.shape[3])
+        input_noise = input_noise if input_noise else torch.randn(x.shape[0],1,x.shape[2],x.shape[3], device=x.device)
         noise = self.noise_strength*input_noise
         return x + noise
 
