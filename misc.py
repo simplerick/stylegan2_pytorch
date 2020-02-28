@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 
 
+
 class Scaled_Act(nn.Module):
     '''
     Scale nonlinearity. By default it scales to retain signal variance
@@ -59,7 +60,6 @@ class Equal_LR:
 
 
 
-
 def grid(array, ncols=8):
     """
     Makes grid from batch of images with shape (n_batch, height, width, channels)
@@ -87,3 +87,21 @@ class NextDataLoader(torch.utils.data.DataLoader):
         except:
             self.iterator = self.__iter__()
             return next(self.iterator)
+
+
+
+def img_tensor_switch(obj, device='cuda', squeeze_channels=True):
+    '''
+    Switch between image and tensor. Supports both batches and single objects.
+    '''
+    if isinstance(obj, np.ndarray):
+        if obj.shape[-1] != 3 and obj.shape[-1] != 1:
+            obj = np.expand_dims(obj,-1)
+        if obj.ndim < 4:
+            obj = np.expand_dims(obj,0)
+        t = torch.tensor(np.moveaxis(obj,-1,-3), dtype=torch.float, device=device)
+        return t
+    if isinstance(obj, torch.Tensor):
+        if squeeze_channels:
+            obj = torch.squeeze(obj, axis=-3)
+        return np.moveaxis(obj.data.cpu().numpy(),-3,-1)
