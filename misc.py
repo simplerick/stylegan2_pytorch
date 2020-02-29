@@ -90,7 +90,7 @@ class NextDataLoader(torch.utils.data.DataLoader):
 
 
 
-def img_tensor_switch(obj, device='cuda', squeeze_channels=False):
+def img_tensor_switch(obj, device='cuda'):
     '''
     Switch between image and tensor. Supports both batches and single objects.
     '''
@@ -103,6 +103,4 @@ def img_tensor_switch(obj, device='cuda', squeeze_channels=False):
         return t
     if isinstance(obj, torch.Tensor):
         array = np.moveaxis(obj.data.cpu().numpy(),-3,-1)
-        if squeeze_channels and array.shape[-1] == 1:
-            array = array[...,0]
         return array
