@@ -90,17 +90,21 @@ class NextDataLoader(torch.utils.data.DataLoader):
 
 
 
-def img_tensor_switch(obj, device='cuda'):
+def to_tensor(obj, device='cuda'):
     '''
-    Switch between image and tensor. Supports both batches and single objects.
+    Convert ndarray to tensor. Supports both batches and single objects.
     '''
-    if isinstance(obj, np.ndarray):
-        if obj.shape[-1] != 3 and obj.shape[-1] != 1:
-            obj = np.expand_dims(obj,-1)
-        if obj.ndim < 4:
-            obj = np.expand_dims(obj,0)
-        t = torch.tensor(np.moveaxis(obj,-1,-3), dtype=torch.float, device=device)
-        return t
-    if isinstance(obj, torch.Tensor):
-        array = np.moveaxis(obj.data.cpu().numpy(),-3,-1)
-        return array
+    if obj.shape[-1] != 3 and obj.shape[-1] != 1:
+        obj = np.expand_dims(obj,-1)
+    if obj.ndim < 4:
+        obj = np.expand_dims(obj,0)
+    t = torch.tensor(np.moveaxis(obj,-1,-3), dtype=torch.float, device=device)
+    return t
+
+
+def to_img(obj):
+    '''
+    Convert tensor to ndarray. Supports both batches and single objects.
+    '''
+    array = np.moveaxis(obj.data.cpu().numpy(),-3,-1)
+    return array
