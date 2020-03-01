@@ -140,7 +140,8 @@ class Noise(nn.Module):
         self.noise_strength = nn.Parameter(torch.zeros(1))
 
     def forward(self, x, input_noise=None):
-        input_noise = input_noise if input_noise else torch.randn(x.shape[0],1,x.shape[2],x.shape[3], device=x.device)
+        if input_noise is None:
+            input_noise = torch.randn(x.shape[0],1,x.shape[2],x.shape[3], device=x.device)
         noise = self.noise_strength*input_noise
         return x + noise
 
@@ -190,10 +191,10 @@ class G_Block(nn.Module):
         self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear', align_corners=False)
         self.act = nonlinearity
 
-    def forward(self, x, v, y=None, input_noises=[None,None]):
-        x = self.noise(self.upconv(x,v), input_noises[0])
+    def forward(self, x, v, y=None, input_noises=None):
+        x = self.noise(self.upconv(x,v), None if (input_noises is None) else input_noises[:,0])
         x = self.act(x)
-        x = self.noise(self.conv(x,v), input_noises[1])
+        x = self.noise(self.conv(x,v), None if (input_noises is None) else input_noises[:,1])
         x = self.act(x)
         if not y is None:
             y = self.upsample(y)
