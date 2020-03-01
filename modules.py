@@ -215,7 +215,7 @@ class D_Block(nn.Module):
         inter_fmaps = (in_fmaps + out_fmaps)//2
         self.conv = nn.Conv2d(in_fmaps, inter_fmaps, kernel_size, padding=kernel_size//2)
         self.downconv = Down_Conv2d(inter_fmaps, out_fmaps, kernel_size, factor=factor)
-        self.down = Down_Conv2d(in_fmaps, out_fmaps, kernel_size=1, factor=factor)
+        self.skip = Down_Conv2d(in_fmaps, out_fmaps, kernel_size=1, factor=factor)
         self.act = nonlinearity
 
     def forward(self, x):
@@ -224,7 +224,7 @@ class D_Block(nn.Module):
         x = self.act(x)
         x = self.downconv(x)
         x = self.act(x)
-        t = self.down(t)
+        t = self.skip(t)
         return (x + t)/ np.sqrt(2)
 
 
