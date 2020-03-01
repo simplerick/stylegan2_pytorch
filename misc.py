@@ -45,10 +45,16 @@ class Equal_LR:
         try:
             weight = getattr(module, self.name)
             module.scale = 1/np.sqrt(Equal_LR.compute_norm(module, weight))
-            # register new parameter -- unscaled weight
-            module.weight_orig = nn.Parameter(weight.clone()/module.scale)
-            # delete old parameter
-            del module._parameters[self.name]
+            if isinstance(weight, torch.nn.Parameter):
+                # register new parameter -- unscaled weight
+                module.weight_orig = nn.Parameter(weight.clone()/module.scale)
+                # delete old parameter
+                del module._parameters[self.name]
+            else:
+                # register new buffer -- unscaled weight
+                module.register_buffer('weight_orig', weight.clone()/module.scale)
+                # delete old buffer
+                del module._buffers[self.name]
             module.equalize = module.register_forward_pre_hook(self.scale_weight)
         except:
             pass
@@ -57,6 +63,17 @@ class Equal_LR:
         new_module = deepcopy(module)
         new_module.apply(self.fn)
         return new_module
+
+
+
+def parameters_to_buffers(m):
+    '''
+    Move all parameters to buffers
+    '''
+    params = m._parameters.copy()
+    m._parameters.clear()
+    for n,p in params.items():
+        m.register_buffer(n, p.data)
 
 
 
