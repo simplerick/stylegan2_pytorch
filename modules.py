@@ -10,7 +10,7 @@ import numpy as np
 
 class Modulated_Conv2d(nn.Conv2d):
     '''
-    Modulated convolution layer. Implemented efficiently using grouped convolutions.
+    Modulated convolution layer. Efficient implementation using grouped convolutions.
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, stride=1, padding=0, dilation=1, **kwargs):
@@ -73,7 +73,7 @@ class Modulated_Conv2d(nn.Conv2d):
 
 class Up_Mod_Conv(Modulated_Conv2d):
     '''
-    Modulated convolution layer with upsampling by some factor, implemented with transposed conv.
+    Modulated transposed convolution layer with upsampling by some factor
     '''
     def __init__(self, in_channels, out_channels, kernel_size, latent_size,
                  demodulate=True, bias=True, factor=2):
