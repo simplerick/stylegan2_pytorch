@@ -43,11 +43,15 @@ class Path_length_loss(nn.Module):
 
 
 def Noise_reg(noise_maps, min_res=8):
-    res = noise_maps.shape[-1]
+    '''
+    Noise maps regularization to suppress pixel correlation
+    '''
     loss = 0
-    while res > 8:
-        loss += (noise_maps * noise_maps.roll(shift=1, dim=2)).mean()**2 \
-                + (noise_maps * noise_maps.roll(shift=1, dim=3)).mean()**2
-        noise_maps = F.avg_pool2d(noise_maps, 2)
-        res = res//2
+    for nmap in noise_maps:
+        res = nmap.shape[-1]
+        while res > 8:
+            loss += ( torch.mean(nmap * nmap.roll(shifts=1, dims=-1), dim=[-1,-2])**2
+                    + torch.mean(nmap * nmap.roll(shifts=1, dims=-2), dim=[-1,-2])**2 ).sum()
+            nmap = F.avg_pool2d(nmap.squeeze(), 2)
+            res = res//2
     return loss
