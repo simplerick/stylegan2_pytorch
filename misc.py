@@ -68,7 +68,7 @@ class Equal_LR:
 
 def parameters_to_buffers(m):
     '''
-    Move all parameters to buffers
+    Move all parameters to buffers (non-recursive)
     '''
     params = m._parameters.copy()
     m._parameters.clear()
@@ -83,6 +83,7 @@ def grid(array, ncols=8):
     """
     array = np.pad(array, [(0,0),(1,1),(1,1),(0,0)], 'constant')
     nindex, height, width, intensity = array.shape
+    ncols = min(nindex, ncols)
     nrows = (nindex+ncols-1)//ncols
     r = nrows*ncols - nindex # remainder
     # want result.shape = (height*nrows, width*ncols, intensity)
