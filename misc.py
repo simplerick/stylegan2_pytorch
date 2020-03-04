@@ -38,6 +38,7 @@ class Equal_LR:
 
 
     def scale_weight(self, module, input):
+        # IDEA: maybe @property сonsumes less memory that creating attribute with hook
         setattr(module, self.name, module.scale*module.weight_orig)
 
 
