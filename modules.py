@@ -186,6 +186,7 @@ class G_Block(nn.Module):
         self.conv = Modulated_Conv2d(inter_fmaps, out_fmaps, kernel_size, latent_size,
                                      padding=kernel_size//2)
         self.noise = Noise()
+        self.noise2 = Noise()
         self.to_channels = Modulated_Conv2d(out_fmaps, img_channels, kernel_size=1,
                                       latent_size=latent_size, demodulate = False)
         self.upsample = nn.Upsample(scale_factor=factor, mode='bilinear', align_corners=False)
@@ -194,7 +195,7 @@ class G_Block(nn.Module):
     def forward(self, x, v, y=None, input_noises=None):
         x = self.noise(self.upconv(x,v), None if (input_noises is None) else input_noises[:,0])
         x = self.act(x)
-        x = self.noise(self.conv(x,v), None if (input_noises is None) else input_noises[:,1])
+        x = self.noise2(self.conv(x,v), None if (input_noises is None) else input_noises[:,1])
         x = self.act(x)
         if not y is None:
             y = self.upsample(y)
